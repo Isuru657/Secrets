@@ -1,9 +1,10 @@
 //jshint esversion:6
 require('dotenv').config();
 const express = require("express");
+const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
-const mongoose = require("mongoose");
+
 const session = require('express-session');
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -27,20 +28,28 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://localhost:27017/userDB", {useNewUrlParser: true});
+mongoose.connect("mongodb://localhost:27017/SecretsDB", {useNewUrlParser: true});
 mongoose.set("useCreateIndex", true);
 
 const userSchema = new mongoose.Schema ({
   email: String,
   password: String,
-  googleId: String,
-  secret: String
+  googleId: String
 });
 
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
 
 const User = new mongoose.model("User", userSchema);
+
+const roomSchema = new mongoose.Schema({
+  link: String,
+  password: String,
+  tasks: [String],
+  admin: String
+})
+
+const Room = new mongoose.model("Room", roomSchema);
 
 passport.use(User.createStrategy());
 
@@ -93,16 +102,47 @@ app.get("/register", function(req, res){
 });
 
 app.get("/secrets", function(req, res){
-  User.find({"secret": {$ne: null}}, function(err, foundUsers){
-    if (err){
-      console.log(err);
-    } else {
-      if (foundUsers) {
-        res.render("secrets", {usersWithSecrets: foundUsers});
-      }
-    }
-  });
+  console.log(req._passport.session.user);
+  if (typeof req.user=='undefined'){
+    res.redirect("login");
+   }
+   else {
+     const userId= req.user.username;
+    res.render("secrets", {username: userId});
+   }
 });
+
+app.post("/secrets", function(req, res){
+
+  if (req.body.create){
+    const roomLink= new Room({
+        link: "/secrets/:" + req.body.roomid,
+        password: req.body.password,
+        taks: [],
+        admin: req.body.userId
+      })
+    console.log(roomLink);
+    Room.find({link: roomLink.link}, function(err, result){
+      if (result){
+        res.redirect("secrets");
+      }
+      else {
+        roomLink.save();
+      }
+    })
+    res.redirect("/secrets/:"+ req.body.roomid);
+  }
+  if (req.body.join) {
+    Room.find({link: "/secrets/:" + req.body.roomid}, function(err, result){
+      if (err){
+        res.redirect("secrets");
+      }
+      else {
+        res.redirect(result.link);
+      }
+    })
+  }
+})
 
 app.get("/submit", function(req, res){
   if (req.isAuthenticated()){
@@ -111,6 +151,8 @@ app.get("/submit", function(req, res){
     res.redirect("/login");
   }
 });
+
+
 
 app.post("/submit", function(req, res){
   const submittedSecret = req.body.secret;
