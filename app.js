@@ -50,14 +50,19 @@ userSchema.plugin(findOrCreate);
 const User = new mongoose.model("User", userSchema);
 
 // Individual task manager rooms for lockin, exec meetings, private meetings for lon etc
+
 const roomSchema = new mongoose.Schema({
   link: String,
   password: String,
-  tasks: [String],
-  admin: String
+  tasks: [{
+    id: String,
+    name: String,
+    user: String
+  }],
+  admin: String,
+  dateCreated: String
 })
 
-roomSchema.plugin(findOrCreate);
 
 const Room = new mongoose.model("Room", roomSchema);
 
@@ -91,7 +96,7 @@ passport.use(new GoogleStrategy({
 
 // Setting up routes through express
 
-//Home page
+//Register page /////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get("/", function(req, res){
   res.render("home");
 });
@@ -103,7 +108,6 @@ app.get("/auth/google",
 app.get("/auth/google/secrets",
   passport.authenticate('google', { failureRedirect: "/login" }),
   function(req, res) {
-    // Successful authentication, redirect to secrets.
     res.redirect("/secrets");
   });
 
@@ -149,7 +153,34 @@ app.post("/login", function(req, res){
 
 });
 
-// After successfully logging in
+
+app.get("/submit", function(req, res){
+  if (req.isAuthenticated()){
+    res.render("submit");
+  } else {
+    res.redirect("/login");
+  }
+});
+
+
+
+app.post("/submit", function(req, res){
+  const submittedSecret = req.body.secret;
+  User.findById(req.user.id, function(err, foundUser){
+    if (err) {
+      console.log(err);
+    } else {
+      if (foundUser) {
+        foundUser.secret = submittedSecret;
+        foundUser.save(function(){
+          res.redirect("/secrets");
+        });
+      }
+    }
+  });
+});
+
+// Home Page /////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get("/secrets", function(req, res){
   console.log(req._passport.session.user);
   if (typeof req.user=='undefined'){
@@ -161,24 +192,27 @@ app.get("/secrets", function(req, res){
    }
 });
 
-// Creating / joining rooms
 app.post("/secrets", function(req, res){
-
   if (req.body.create){
-
-    Room.findOne({link: req.body.roomid}, function(err, result){
+    Room.findOne({link: "/secrets/:" + req.body.roomid}, function(err, result){
       if (result){
         res.redirect(result.link);
       }
       if (!result){
+
+
         const roomLink= new Room({
             link: "/secrets/:" + req.body.roomid,
             password: req.body.password,
-            tasks: [],
-            admin: req.body.userId
+            tasks: [{
+              id: "one",
+              name: "Please enter tasks below",
+              user: req.body.create
+            }],
+            admin: req.body.create,
+            dateCreated: new Date().toISOString().slice(0, 10) // for Date Assigned
         });
         roomLink.save();
-        console.log(roomLink);
         res.redirect("/secrets/:" + req.body.roomid);
       }
       if (err){
@@ -186,7 +220,6 @@ app.post("/secrets", function(req, res){
       }
     })
     }
-    // res.redirect("/secrets/:"+ req.body.roomid);
 
 if (req.body.join) {
 
@@ -202,40 +235,52 @@ if (req.body.join) {
   }
 });
 
-// Custom routes for individual task manager rooms
-// app.get("/secrets:")
+// Custom routes for individial task manager rooms /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.get("/submit", function(req, res){
-  if (req.isAuthenticated()){
-    res.render("submit");
-  } else {
-    res.redirect("/login");
-  }
-});
+ app.get("/secrets/:customRoomName", function(req, res){
+   const user= req.user.username;
+   const customRoomName= req.params.customRoomName;
+   Room.findOne({link: "/secrets/" + customRoomName}, function(err, result){
+     if (!err){
+       res.render("room", {userName: user, roomId: result.link, date: result.dateCreated, adminId: result.admin, tasks: result.tasks});
+     }
+
+ })
+})
 
 
 
-app.post("/submit", function(req, res){
-  const submittedSecret = req.body.secret;
-
-//Once the user is authenticated and their session gets saved, their user details are saved to req.user.
-  // console.log(req.user.id);
-
-  User.findById(req.user.id, function(err, foundUser){
-    if (err) {
-      console.log(err);
-    } else {
-      if (foundUser) {
-        foundUser.secret = submittedSecret;
-        foundUser.save(function(){
-          res.redirect("/secrets");
-        });
+app.post("/", function(req, res){
+  const customRoomlink= req.body.roomId;
+  Room.findOneAndUpdate({link:customRoomlink},
+    {$push: {tasks: {id: Math.floor(1000000000 + Math.random() * 9000000000),
+      name: req.body.newItem,
+      user: req.user.username
+    }}},
+    function(err, addedItem){
+      if (!err){
+        res.redirect(req.body.roomId);
       }
     }
-  });
-});
+  )
+})
 
-//Logging out
+app.post("/delete", function(req, res){
+  const customRoomLink= req.body.roomId;
+  const checkedItemId= req.body.box;
+  Room.findOneAndUpdate(
+          {link: customRoomLink},
+          {$pull: {tasks: {id: checkedItemId}}},
+          function (err, removedItem){
+            if (!err){
+              res.redirect(customRoomLink);
+            }
+          }
+        )
+})
+
+
+// Logging out //////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get("/logout", function(req, res){
   req.logout();
   res.redirect("/");

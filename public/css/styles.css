@@ -14,3 +14,8 @@ body {
   color: #fff;
   background-color: #000;
 }
+
+.col-cj {
+  flex: 100%;
+  max-width: 100%;
+}
