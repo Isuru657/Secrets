@@ -30,7 +30,7 @@ I'll go over the structure of this project with the use of a case study to help 
 
 ## Project structure
 
-<img src= "/structure.png">
+<img src= "/structure2.png">
 
 ### The case study:
 I have a problem about the level of noise in the house after 11:00pm because I have classes early in the morning. I decided to use this app hoping to discuss my concern with everyone living in the house and see if anyone else shares my sentiments.
