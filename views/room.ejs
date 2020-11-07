@@ -1,39 +1,72 @@
 <%- include('partials/header') %>
 
-  <div class="jumbotron">
-    <div class="container">
-    <h1> Welcome <%= userName %> to <%= roomId %> </h1>
-    </div>
-    <hr> </hr>
-    <div>
+<div class="jumbotron">
+  <div class="container2">
+    <h1> Welcome <%= userName %>  </h1>
+  </div>
+  <hr>
+  </hr>
+  <div>
     <h3> Admin: <%= adminId %> </h3>
     <h3> Date Assigned: <%= date %> </h3>
-    <hr> </hr>
-  </div>
-  </div>
+    <h3> Issues Covered: <%= taskCom %> </h3>
+    <hr>
+    </hr>
 
-  <div>
-      <% tasks.forEach((task, i) => { %>
-        <% if (i===0) {%>
-          <form action= "/delete" method="post">
-          <div class="container jumbotron text-center">
-            <input type="hidden" name="roomId" value="<%= roomId %>"> </input>
-            <p><%= task.name %></p>
-          </div>
-          </form>
-        <% } else { %>
-        <form action= "/delete" method="post">
-        <div class="item">
-          <input type="checkbox" onChange="this.form.submit()" name="box" value="<%= task.id %>">
-          <input type="hidden" name="roomId" value="<%= roomId %>"> </input>
-          <p><%= task.name %></p>
-        </div>
-        </form>
-        <% } %>
-      <% }); %>
-      <form class="item" action="/" method="post">
-        <input type="text" name="newItem" placeholder="New Item" autocomplete="off">
+    <form action="/secrets" method="GET">
+      <button class="btn btn-dark" type="submit" name="secrets" > Go back to main page</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- Display list of isssues using ejs formatting  -->
+<div class="container jumbotron text-center">
+  <hr>
+  </hr>
+  <% tasks.forEach((task, i) => { %>
+  <% if (i===0) {%>
+
+  <div class="container jumbotron text-center">
+    <div class="left">
+      <form action="/delete" method="post">
         <input type="hidden" name="roomId" value="<%= roomId %>"> </input>
-        <button type="submit" name="list" value="">+</button>
+
       </form>
+    </div>
+
+    <div class="right" <p><%= task.name %></p>
+      <div>
+
+        <hr>
+        </hr>
+
+        <% } else { %>
+
+        <div class="item">
+          <div class="left">
+            <form action="/delete" method="post">
+              <input type="checkbox" onChange="this.form.submit()" name="box" value="<%= task.id %>">
+              <input type="hidden" name="roomId" value="<%= roomId %>"> </input>
+
+            </form>
+          </div>
+          <div class="right">
+            <p><%= task.user %> : <%= task.name %></p>
+          </div>
+        </div>
+
+        <% } %>
+        <% }); %>
+        <form class="item" action="/" method="post">
+          <input type="text" name="newItem" placeholder="New Item" autocomplete="off">
+          <input type="hidden" name="roomId" value="<%= roomId %>"> </input>
+          <input type="hidden" name="user" value="<%= userName %>"> </input>
+          <button type="submit" name="list" value="">+</button>
+        </form>
       </div>
+    </div>
+    </div>
+
+  </div>
+  <hr>

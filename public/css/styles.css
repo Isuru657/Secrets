@@ -1,4 +1,9 @@
-
+/*
+*
+* Author: Isuru Abeysekara
+* Description: Styling for the Secrets Web App
+*
+*/
 body {
   background-color: #E8ECEF;
 }
@@ -18,4 +23,25 @@ body {
 .col-cj {
   flex: 100%;
   max-width: 100%;
+}
+
+.container2 {
+  width: 100%;
+  margin-left: 0%;
+  margin-right: 0%;
+}
+
+.taskcontainer{
+  margin-right: auto;
+  margin-lefT: auto;
+}
+
+.left {
+  width: 20%;
+  float: left:
+}
+
+.right {
+  width: 60%;
+  float: left;
 }
