@@ -55,7 +55,9 @@ I have a problem about the level of noise in the house after 11:00pm because I h
 ## Packages used
 
 a) express.js: The package manages routing in the app and all client-server communication.
+
 b) mongoose: This package will help connect to the remotely hosted database and help store and retrieve data pertaining to the project.
+
 c) ejs: This will handle all front-end rendering as it allows html to be replicated when creating discussion rooms. It eliminates the need to manually code discussion rooms every time a new discussion room is created.
 
 ## The Landing page
